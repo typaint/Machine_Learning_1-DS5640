@@ -1,1 +1,3 @@
-# homework-DS5640
+# homework-template
+
+This is a homework template repository.
