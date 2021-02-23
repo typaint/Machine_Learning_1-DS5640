@@ -14,7 +14,7 @@ library(devtools)
 prostate <-read.table(url('https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data'))
 
 ## subset to training examples
-prostate_train <- subset(prostate, train==TRUE)
+prostate_train <- subset(prostate, train==TRUE) # 2/3 for train, 1/3 test
 
 ## plot lcavol vs lpsa
 plot_psa_data <- function(dat=prostate_train) {
@@ -39,7 +39,7 @@ L1_loss <- function(y, yhat)
 
 ## tilted absolute loss function, tau=0.25
 tilt_loss25 <- function(y, yhat, tau){
- tav = ifelse(y-yhat>0, 0.25*(y-yhat), (0.25-1)*(y-yhat))
+ tav = ifelse(y-yhat>0, 0.25*(y-yhat), (0.25-1)*(y-yhat)) # gives absolute loss
  return(tav)
 }
 ## tilted absolute loss function, tau=0.75
