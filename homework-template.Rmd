@@ -1,19 +1,36 @@
 ---
-title: "Homework Template"
-author: "Last, First"
+title: "Homework 2"
+author: "Painter, Ty"
 date: "`r date()`"
-output: 
-  html_document:
-    toc: true
-  md_document: default
+output: github_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## Template
-
+# Using the RMarkdown/knitr/github mechanism, implement the following tasks:
+- Use the prostate cancer data.
 ```{r}
-hist(rgamma(1000, shape=1, rate=1))
+prostate <-read.table(url('https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data'))
+prostate <- subset(prostate, train==TRUE) # 2/3 for train, 1/3 test
 ```
+
+- Use the cor function to reproduce the correlations listed in HTF Table 3.1, page 50.
+```{r}
+prostate.x <- prostate[,c("lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")]
+prostate.y <- prostate[,c("lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason")]
+cor_table <- round(cor(prostate.x, prostate.y),3)
+
+cor_table[upper.tri(cor_table)]<-""
+cor_table<-as.data.frame(cor_table)
+cor_table
+```
+
+- Treat lcavol as the outcome, and use all other variables in the data set as predictors.
+- With the training subset of the prostate data, train a least-squares regression model with all predictors using the lm function.
+```{r}
+
+```
+
+- Use the testing subset to compute the test error (average squared-error loss) using the fitted least-squares regression model.
+- Train a ridge regression model using the glmnet function, and tune the value of lambda (i.e., use guess and check to find the value of lambda that approximately minimizes the test error).
+- Create a figure that shows the training and test error associated with ridge regression as a function of lambda
+- Create a path diagram of the ridge regression analysis, similar to HTF Figure 3.8
+## Links
+(https://lagunita.stanford.edu/courses/HumanitiesSciences/StatLearning/Winter2016/about)
