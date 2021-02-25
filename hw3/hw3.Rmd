@@ -59,7 +59,7 @@ library('glmnet')
 form <- lcavol ~ 0 + lweight + age + lbph + lcp + pgg45 + lpsa + svi + gleason # what is this?
 x_inp <- model.matrix(form, data=prostate_train) # math to form this matrix?
 y_out <- prostate_train$lcavol
-ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(0.5, 0, -0.05))
+ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(0.5, 0, length=9))
 print(ridge_reg$beta) # beta over sequence of lambda
 
 ## functions to compute testing/training error with glmnet
@@ -105,8 +105,8 @@ plot(x=range(ridge_reg$lambda),
      xlab=expression(lambda),
      ylab='Coefficients')
 for(i in 1:nrow(ridge_reg$beta)) {
-  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col='#00000055')
-  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col='#00000055')
+  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col='blue')
+  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col='blue')
 }
 abline(h=0, lty=3, lwd=2)
 ```

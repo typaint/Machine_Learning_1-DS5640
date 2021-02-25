@@ -1,7 +1,7 @@
 Homework 3
 ================
 Painter, Ty
-Thu Feb 25 08:23:34 2021
+Thu Feb 25 09:12:05 2021
 
 # Using the RMarkdown/knitr/github mechanism, implement the following tasks:
 
@@ -164,32 +164,29 @@ library('glmnet')
 form <- lcavol ~ 0 + lweight + age + lbph + lcp + pgg45 + lpsa + svi + gleason # what is this?
 x_inp <- model.matrix(form, data=prostate_train) # math to form this matrix?
 y_out <- prostate_train$lcavol
-ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(0.5, 0, -0.05))
+ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(0.5, 0, length=9))
 print(ridge_reg$beta) # beta over sequence of lambda
 ```
 
-    ## 8 x 11 sparse Matrix of class "dgCMatrix"
-
-    ##    [[ suppressing 11 column names 's0', 's1', 's2' ... ]]
-
-    ##                                                                              
-    ## lweight .         .         .         .         .         .         .        
-    ## age     .         .         .         .         .         .         .        
-    ## lbph    .         .         .         .         .         .         .        
-    ## lcp     0.1473018 0.1714414 0.1955919 0.2197423 0.2438928 0.2680433 0.2921937
-    ## pgg45   .         .         .         .         .         .         .        
-    ## lpsa    0.2535992 0.2816134 0.3096214 0.3376294 0.3656374 0.3936454 0.4216534
-    ## svi     .         .         .         .         .         .         .        
-    ## gleason .         .         .         .         .         .         .        
-    ##                                                           
-    ## lweight .            .            .           -0.113959029
-    ## age     0.0006179005 0.005823836  0.010987417  0.020114429
-    ## lbph    .            .           -0.004060083 -0.056959719
-    ## lcp     0.3160341041 0.337951116  0.352226351  0.418442122
-    ## pgg45   .            .            .           -0.009110807
-    ## lpsa    0.4489636282 0.470877681  0.491246304  0.575583816
-    ## svi     .            .            0.026126960  0.035184640
-    ## gleason .            .            0.011159844  0.224210312
+    ## 8 x 9 sparse Matrix of class "dgCMatrix"
+    ##                s0        s1        s2        s3        s4        s5          s6
+    ## lweight .         .         .         .         .         .         .          
+    ## age     .         .         .         .         .         .         0.003222941
+    ## lbph    .         .         .         .         .         .         .          
+    ## lcp     0.1473018 0.1774814 0.2076694 0.2378575 0.2680456 0.2982337 0.326967382
+    ## pgg45   .         .         .         .         .         .         .          
+    ## lpsa    0.2535992 0.2886141 0.3236241 0.3586341 0.3936441 0.4286541 0.459932037
+    ## svi     .         .         .         .         .         .         .          
+    ## gleason .         .         .         .         .         .         .          
+    ##                  s7           s8
+    ## lweight .           -0.113830185
+    ## age     0.009626789  0.020117489
+    ## lbph    .           -0.056999080
+    ## lcp     0.350633927  0.418428323
+    ## pgg45   .           -0.009111341
+    ## lpsa    0.485226383  0.575597098
+    ## svi     0.017659982  0.035138413
+    ## gleason 0.004936519  0.224229463
 
 ``` r
 ## functions to compute testing/training error with glmnet
@@ -204,7 +201,7 @@ ridge_error <- function(data, fit, lambda, form, loss=L2_loss) {
 ridge_error(prostate_test, ridge_reg, lambda=.21, form=form) 
 ```
 
-    ## [1] 0.4641284
+    ## [1] 0.4641289
 
   - Create a figure that shows the training and test error associated
     with ridge regression as a function of lambda
@@ -249,8 +246,8 @@ plot(x=range(ridge_reg$lambda),
      xlab=expression(lambda),
      ylab='Coefficients')
 for(i in 1:nrow(ridge_reg$beta)) {
-  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col='#00000055')
-  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col='#00000055')
+  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col='blue')
+  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col='blue')
 }
 abline(h=0, lty=3, lwd=2)
 ```
