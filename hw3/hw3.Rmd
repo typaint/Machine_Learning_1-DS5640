@@ -59,7 +59,7 @@ library('glmnet')
 form <- lcavol ~ 0 + lweight + age + lbph + lcp + pgg45 + lpsa + svi + gleason # what is this?
 x_inp <- model.matrix(form, data=prostate_train) # math to form this matrix?
 y_out <- prostate_train$lcavol
-ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(0.5, 0, length=9))
+ridge_reg <- glmnet(x=x_inp, y=y_out, lambda=seq(1, 0, -0.05), alpha=0)
 print(ridge_reg$beta) # beta over sequence of lambda
 
 ## functions to compute testing/training error with glmnet
@@ -71,7 +71,7 @@ ridge_error <- function(data, fit, lambda, form, loss=L2_loss) {
 }
 
 ## minimize test error
-ridge_error(prostate_test, ridge_reg, lambda=.21, form=form) 
+ridge_error(prostate_test, ridge_reg, lambda=.12, form=form) 
 ```
 
 - Create a figure that shows the training and test error associated with ridge regression as a function of lambda
@@ -85,12 +85,13 @@ test_err <- sapply(ridge_reg$lambda, function(lambda)
 ## plot test/train error
 plot(x=range(ridge_reg$lambda),
      y=range(c(train_err, test_err)),
+     xlim=rev(range(ridge_reg$lambda)),
      type='n',
      xlab=expression(lambda),
      ylab='train/test error')
 points(ridge_reg$lambda, train_err, pch=19, type='b', col='darkblue')
-points(ridge_reg$lambda, test_err, pch=19, type='b', col='darkred')
-legend('topleft', c('train','test'), lty=1, pch=19,
+points(ridge_reg$lambda, test_err, pch=19, type='b', col='darkred') # nice 'u' shape, 0.1 minimize test error
+legend('topright', c('train','test'), lty=1, pch=19,
        col=c('darkblue','darkred'), bty='n')
 
 colnames(ridge_reg$beta) <- paste('lam =', ridge_reg$lambda) # test error minimized at 0.21
@@ -105,11 +106,12 @@ plot(x=range(ridge_reg$lambda),
      xlab=expression(lambda),
      ylab='Coefficients')
 for(i in 1:nrow(ridge_reg$beta)) {
-  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col='blue')
-  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col='blue')
+  points(x=ridge_reg$lambda, y=ridge_reg$beta[i,], pch=19, col = "blue")
+  lines(x=ridge_reg$lambda, y=ridge_reg$beta[i,], col = "blue")
 }
 abline(h=0, lty=3, lwd=2)
+text(ridge_reg$lambda[1], ridge_reg$beta[1:nrow(ridge_reg$beta)],  row.names(as.matrix(ridge_reg$beta)),
+     cex=0.6, pos=4,col="black")
 ```
-
 ## Links
 (https://lagunita.stanford.edu/courses/HumanitiesSciences/StatLearning/Winter2016/about)
