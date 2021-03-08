@@ -1,0 +1,150 @@
+---
+title: "Homework 4"
+author: "Painter, Ty"
+date: "`r date()`"
+output: github_document
+---
+
+# Using the RMarkdown/knitr/github mechanism, complete the following exercises from chapter 4, section 4.7 (beginning pp 168) or the https://www.statlearning.com/:
+- Exercise 4: "When the number of features p is large, there tends to be a deterioration in the performance of KNN and other local approaches that perform prediction using only observations that are near the test observation for which a prediction must be made. This phenomenon is known as the curse of dimensionality, and it ties into the fact that non-parametric approaches often perform poorly when p is large. We will now investigate this curse." 
+(a) Suppose that we have a set of observations, each with measurements on p = 1 feature, X. We assume that X is uniformly (evenly) distributed on [0, 1]. Associated with each observation is a response value. Suppose that we wish to predict a test observation’s response using only observations that are within 10 % of the range of X closest to that test observation. For instance, in order to predict the response for a test observation with X = 0.6, we will use observations in the range [0.55, 0.65]. On average, what fraction of the available observations will we use to make the prediction?
+  - For values of X between 0.05 and 0.95 there will be a full 10% of values, but X values < 0.05 and > 0.95 will have a restricted range. To calculate these small percentages I found the average values for 0-0.5, 0.05-0.95, and 0.95-1 values and added them together to get 9.7%.
+(b) Now suppose that we have a set of observations, each with measurements on p = 2 features, X1 and X2. We assume that (X1, X2) are uniformly distributed on [0, 1] × [0, 1]. We wish to predict a test observation’s response using only observations that are within 10 % of the range of X1 and within 10 % of the range of X2 closest to that test observation. For instance, in order to predict the response for a test observation with X1 = 0.6 and X2 = 0.35, we will use observations in the range [0.55, 0.65] for X1 and in the range [0.3, 0.4] for X2. On average, what fraction of the available observations will we use to make the prediction?
+  - The available observations are represented by the fraction (0.097)^p = 0.94%.
+(c) Now suppose that we have a set of observations on p = 100 features. Again the observations are uniformly distributed on each feature, and again each feature ranges in value from 0 to 1. We wish to predict a test observation’s response using observations within the 10 % of each feature’s range that is closest to that test
+observation. What fraction of the available observations will we use to make the prediction?
+  - The available observations are represented by the fraction (0.097)^p^p = 4.76e-100%.
+(d) Using your answers to parts (a)–(c), argue that a drawback of KNN when p is large is that there are very few training observations “near” any given test observation.
+  - As the p dimensions increase the percentage of available observation exponentially decreases implying increasing the the number of dimensions is actually minimizing the percentage of observations that can be used. The smaller the percentage of available observations, the farther away the neighboring observations will be.
+(e) Now suppose that we wish to make a prediction for a test observation by creating a p-dimensional hypercube centered around the test observation that contains, on average, 10 % of the training observations. For p = 1, 2, and 100, what is the length of each side of the hypercube? Comment on your answer.
+  - THe fraction used will be (0.097)^(1/p) so the larger p, the larger the side length. When p=1, the length is 0.097, p=2 the length is 0.311, and p=100 the length is 0.977. This implies the the longer the sides, the farther away the neighboring observations are. 
+
+*Note: A hypercube is a generalization of a cube to an arbitrary
+number of dimensions. When p = 1, a hypercube is simply a line
+segment, when p = 2 it is a square, and when p = 100 it is a
+100-dimensional cube.*
+
+- Exercise 10: This question should be answered using the Weekly data set, which is part of the ISLR package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1, 089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+(a) Produce some numerical and graphical summaries of the Weekly
+data. Do there appear to be any patterns?
+```{r}
+library(ISLR)
+library(tidyverse)
+data("Weekly")
+summary(Weekly)
+cor(Weekly[,-9])
+ts.weekly <- ts(Weekly, start=1990, end=2010, frequency=52)
+plot.ts(ts.weekly)
+```
+  - All of the lags seem to be similar and the volume of trading has been on a gradual increase. There has also been high volatility in recent years surrounding the 2008 financial crisis
+
+(b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+```{r}
+library(stats)
+Weekly$Direction <- as.factor(Weekly$Direction)
+log_fit <- glm(Direction ~ Lag1+Lag2+Lag3+Lag4+Lag5+Volume,
+               data=Weekly, 
+               family=binomial)
+summary(log_fit)
+```
+  - No coefficients stand out as significantly significant, but Lags 1 and 2 have the strongest significance. 
+(c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+```{r}
+library(heuristica)
+glm_probs <- predict(log_fit, type='response') # probability of market going up
+glm_preds <- ifelse(glm_probs >.5, "Up", "Down") # convert probs to up or down
+table(glm_preds, Weekly$Direction) # confusion matrix
+```
+  - The matrix shows that the logistic regression's biggest mistakes are predicting up when the market went down. 
+(d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+```{r}
+train <- subset(Weekly, Weekly$Year <= 2008)
+test <- subset(Weekly, Weekly$Year > 2008)
+log_fit <- glm(Direction ~ Lag2, # fit model with training data
+               data=train, 
+               family=binomial)
+#summary(log_fit)
+#log_fit
+log_probs <- predict(log_fit, test, type='response') # probability of market going up using train model on test data
+log_preds <- ifelse(log_probs >.5, "Up", "Down") # convert probs to up or down
+table(log_preds, test$Direction) # confusion matrix
+mean(log_preds == test$Direction)
+```
+(e) Repeat (d) using LDA.
+```{r}
+library(MASS)
+lda_fit <- lda(Direction ~ Lag2, # fit model with training data
+               data=train)
+#lda_fit
+lda_preds <- predict(lda_fit, test)
+table(lda_preds$class, test$Direction)
+mean(lda_preds$class == test$Direction)
+```
+
+(f) Repeat (d) using QDA.
+```{r}
+qda_fit <- qda(Direction ~ Lag2, # fit model with training data
+               data=train)
+qda_preds <- predict(qda_fit, test)
+table(qda_preds$class, test$Direction)
+mean(qda_preds$class == test$Direction)
+```
+
+(g) Repeat (d) using KNN with K = 1.
+```{r}
+library(class)
+set.seed(42)
+knn_preds <- knn(as.data.frame(train$Lag2), as.data.frame(test$Lag2), train$Direction, k=1)
+table(knn_preds, test$Direction)
+mean(knn_preds == test$Direction)
+```
+
+(h) Which of these methods appears to provide the best results on this data?
+  - Logistic regression and LDA provide the best results both predicting correctly 62.5% of the time. 
+(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier."
+  - I chose to use Lags 1 and 2 because they were the most statistically significant in my original analysis.
+```{r}
+# logistic regression
+log_fitx <- glm(Direction ~ Lag1+Lag2, # fit model with training data
+               data=train, 
+               family=binomial)
+#summary(log_fitx)
+#log_fitx
+log_probsx <- predict(log_fitx, test, type='response') # probability of market going up using train model on test data
+log_predsx <- ifelse(log_probsx >.5, "Up", "Down") # convert probs to up or down
+table(log_predsx, test$Direction) # confusion matrix
+mean(log_predsx == test$Direction)
+```
+
+```{r}
+# LDA
+lda_fitx <- lda(Direction ~ Lag1+Lag2, # fit model with training data
+               data=train)
+#lda_fit
+lda_predsx <- predict(lda_fitx, test)
+table(lda_predsx$class, test$Direction)
+mean(lda_predsx$class == test$Direction)
+```
+
+```{r}
+qda_fitx <- qda(Direction ~ Lag1+Lag2, # fit model with training data
+               data=train)
+qda_predsx <- predict(qda_fitx, test)
+table(qda_predsx$class, test$Direction)
+mean(qda_predsx$class == test$Direction)
+```
+
+```{r}
+trainx <- cbind(train$Lag1,train$Lag2)
+testx <- cbind(test$Lag1,test$Lag2)
+
+set.seed(15)
+
+knn_predsx <- knn(trainx, testx, train$Direction, k=9)
+table(knn_predsx, test$Direction)
+mean(knn_predsx == test$Direction)
+```
+  - k=9 produces the best prediction rate for the KNN method
+  - Once again the logistic regression and LDA method produce the best results both prediciting correctly 57.7% of the time.
+
+
