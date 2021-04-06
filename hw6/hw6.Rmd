@@ -65,7 +65,7 @@ test_y <- as.factor(test$y)
 test_preds <- predict(rf_fit, newdata = test)
 cverr <- rep(NA, length(test))
 
-confusionMatrix(test_y, test_preds)
+confusionMatrix(test_y, test_preds) 
 ```
 
 

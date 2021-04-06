@@ -1,7 +1,7 @@
 Homework 6
 ================
 Painter, Ty
-Mon Apr 5 22:32:12 2021
+Mon Apr 5 22:33:56 2021
 
 Goal: Understand and implement a random forest classifier.
 
@@ -108,7 +108,7 @@ test_y <- as.factor(test$y)
 test_preds <- predict(rf_fit, newdata = test)
 cverr <- rep(NA, length(test))
 
-confusionMatrix(test_y, test_preds)
+confusionMatrix(test_y, test_preds) 
 ```
 
     ## Confusion Matrix and Statistics
