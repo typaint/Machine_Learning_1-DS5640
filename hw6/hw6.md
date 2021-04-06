@@ -1,7 +1,7 @@
 Homework 6
 ================
 Painter, Ty
-Mon Apr 5 22:25:30 2021
+Mon Apr 5 22:32:12 2021
 
 Goal: Understand and implement a random forest classifier.
 
@@ -94,7 +94,8 @@ rf_fit <- train(y~.,
                 trControl = control,
                 metric = "Accuracy",
                 method = 'ranger', 
-                tuneGrid = tunegrid)
+                tuneGrid = tunegrid, 
+                classification = TRUE)
 ```
 
 ### 5\. With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
