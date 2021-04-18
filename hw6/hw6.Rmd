@@ -54,7 +54,20 @@ rf_fit <- train(y~.,
                 method = 'ranger', 
                 tuneGrid = tunegrid, 
                 classification = TRUE)
+
+tune_params <- as.data.frame(rf_fit[4]) # make grid search accuracy a data frame
+tune_params <- tune_params %>% arrange(desc(results.Accuracy)) # sort by accuracy and select the params with best accuracy
+tune_params[1,]
 ```
+I created a data frame with the results from the grid search and arranged the results in order of highest accuracy and selected the top row. The parameters with the best accuracy are 3 variables sampled at each split and a minimum of 1 terminal node.
+```{r}
+set.seed(12)
+rf_best_fit <- randomForest(y ~ ., 
+                            data=train,
+                            nodesize=1,
+                            mtry=3)
+```
+I created a best fit model with the specified best parameters.
 
 ### 5. With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
 ```{r}
@@ -62,12 +75,17 @@ test <- read.csv(url("https://web.stanford.edu/~hastie/ElemStatLearn/datasets/vo
 test <- test[,2:ncol(test)]
 test_y <- as.factor(test$y)
 ## compute test error on testing data
-test_preds <- predict(rf_fit, newdata = test)
+test_preds <- predict(rf_best_fit, newdata = test)
 cverr <- rep(NA, length(test))
 
 confusionMatrix(test_y, test_preds) 
 ```
-
+The misclassification rate is ~40%.
+```{r}
+# misclassification rate
+accuracy <- as.data.frame(confusionMatrix(test_y, test_preds)[3])[1,]
+1 - accuracy
+```
 
 
 
