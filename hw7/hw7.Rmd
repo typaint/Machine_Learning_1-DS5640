@@ -150,7 +150,7 @@ predictions
 # subtract 1 as labels are 0-based
 prediction <- predictions[1, ] - 1
 which.max(prediction) # find best prediction
-class_pred <- model %>% predict_classes(img) # get class predicition
+class_pred <- model %>% predict_classes(img) # get class prediction
 class_pred
 ```
 
@@ -187,23 +187,67 @@ k_fit %>% fit(x=dat$x, y=dat$y, epochs = 5, verbose = 2)
 
 
 ## 3. Create a figure to illustrate that the predictions are (or are not) similar using the 'nnet' function versus the Keras model.
+
 ```{r}
-# Predictions for Keras model
-k_probs <- predict(k_fit, x= dat$xnew, type="class")
+# plot data
+plot_mixture_data <- expression({
+  plot(dat$x[,1], dat$x[,2],
+       col=ifelse(dat$y==0, 'blue', 'orange'),
+       pch=20,
+       xlab=expression(x[1]),
+       ylab=expression(x[2]))
+  ## draw Bayes (True) classification boundary
+  prob <- matrix(dat$prob, length(dat$px1), length(dat$px2))
+  cont <- contourLines(dat$px1, dat$px2, prob, levels=0.5)
+  rslt <- sapply(cont, lines, col='purple')
+})
+```
+
+```{r}
+# Predictions and Probabilities for Keras model
+k_probs <- k_fit %>% predict(dat$xnew)
 k_preds <- k_fit %>% predict_classes(dat$xnew)
+
+# plot keras boundary
+plot_keras_preds <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
+
+  ## compute predictions from nnet
+  probs <- k_probs[,1]
+  preds <- k_preds
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+
+plot_keras_preds(k_fit) # final plot
 ```
 
 ```{r}
-# Predictions using nnet function
-n_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
-n_preds <- predict(n_fit, dat$xnew, type="class")
-```
+# fit using nnet function
+nnet_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
+# compute probabilities and predictions using nnet 
+nnet_preds <- predict(nnet_fit, dat$xnew, type="class")
+nnet_probs <- predict(nnet_fit, dat$xnew, type="raw")
 
-```{r}
-plot(1:length(k_preds), k_preds, type ="l", col = "red")
-plot(1:length(n_preds), n_preds, type ="l", col = "blue")
-```
+# plot nnet decision boundary
+plot_nnet_preds <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
 
+  ## compute predictions from nnet
+  preds <- nnet_preds
+  probs <- nnet_probs[,1]
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+
+plot_nnet_preds(nnet_fit) # final plot
+```
 
 ## 4. (optional extra credit) Convert the neural network described in the "Image Classification" tutorial to a network that is similar to one of the convolutional networks described during lecture on 4/15 (i.e., Net-3, Net-4, or Net-5) and also described in the ESL book section 11.7. See the !ConvNet tutorial on the RStudio Keras website.
 

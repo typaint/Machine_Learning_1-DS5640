@@ -1,7 +1,7 @@
 Homework 7
 ================
 Painter, Ty
-Tue Apr 27 10:52:41 2021
+Thu Apr 29 09:12:56 2021
 
 # Goal: Get started using Keras to construct simple neural networks
 
@@ -133,13 +133,13 @@ score <- model %>% evaluate(test_images, test_labels, verbose = 0)
 cat('Test loss:', score['loss'], "\n")
 ```
 
-    ## Test loss: 0.3469338
+    ## Test loss: 0.3758704
 
 ``` r
 cat('Test accuracy:', score['accuracy'], "\n") # less accurate than train data, overfit
 ```
 
-    ## Test accuracy: 0.8767
+    ## Test accuracy: 0.8658
 
 ``` r
 # make predictions
@@ -147,8 +147,8 @@ predictions <- model %>% predict(test_images)
 predictions[1, ] # look at predicted label for 1st image; each value is confidence in each of 10 labels
 ```
 
-    ##  [1] 4.759656e-09 1.825374e-08 6.359154e-10 6.607809e-10 1.330060e-08
-    ##  [6] 2.028991e-03 3.793811e-08 2.366113e-02 4.205029e-06 9.743056e-01
+    ##  [1] 5.512096e-06 1.371031e-06 8.143277e-07 1.226974e-06 1.147233e-05
+    ##  [6] 4.084945e-03 1.943381e-06 3.371162e-01 5.050647e-05 6.587261e-01
 
 ``` r
 which.max(predictions[1, ]) # examine which label has highest confidence
@@ -207,10 +207,10 @@ predictions <- model %>% predict(img) # predict image
 predictions
 ```
 
-    ##              [,1]         [,2]        [,3]         [,4]         [,5]
-    ## [1,] 4.759656e-09 1.825374e-08 6.35913e-10 6.607809e-10 1.330062e-08
-    ##             [,6]         [,7]       [,8]         [,9]     [,10]
-    ## [1,] 0.002028993 3.793811e-08 0.02366113 4.205029e-06 0.9743056
+    ##              [,1]         [,2]         [,3]         [,4]         [,5]
+    ## [1,] 5.512105e-06 1.371029e-06 8.143268e-07 1.226976e-06 1.147233e-05
+    ##             [,6]         [,7]      [,8]         [,9]    [,10]
+    ## [1,] 0.004084949 1.943381e-06 0.3371163 5.050651e-05 0.658726
 
 ``` r
 # subtract 1 as labels are 0-based
@@ -221,7 +221,7 @@ which.max(prediction) # find best prediction
     ## [1] 10
 
 ``` r
-class_pred <- model %>% predict_classes(img) # get class predicition
+class_pred <- model %>% predict_classes(img) # get class prediction
 class_pred
 ```
 
@@ -275,45 +275,86 @@ k_fit %>% fit(x=dat$x, y=dat$y, epochs = 5, verbose = 2)
 ## 3\. Create a figure to illustrate that the predictions are (or are not) similar using the ‘nnet’ function versus the Keras model.
 
 ``` r
-# Predictions for Keras model
-k_probs <- predict(k_fit, x= dat$xnew, type="class")
-k_preds <- k_fit %>% predict_classes(dat$xnew)
+# plot data
+plot_mixture_data <- expression({
+  plot(dat$x[,1], dat$x[,2],
+       col=ifelse(dat$y==0, 'blue', 'orange'),
+       pch=20,
+       xlab=expression(x[1]),
+       ylab=expression(x[2]))
+  ## draw Bayes (True) classification boundary
+  prob <- matrix(dat$prob, length(dat$px1), length(dat$px2))
+  cont <- contourLines(dat$px1, dat$px2, prob, levels=0.5)
+  rslt <- sapply(cont, lines, col='purple')
+})
 ```
 
 ``` r
-# Predictions using nnet function
-n_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
+# Predictions and Probabilities for Keras model
+k_probs <- k_fit %>% predict(dat$xnew)
+k_preds <- k_fit %>% predict_classes(dat$xnew)
+
+# plot keras boundary
+plot_keras_preds <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
+
+  ## compute predictions from nnet
+  probs <- k_probs[,1]
+  preds <- k_preds
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+
+plot_keras_preds(k_fit) # final plot
+```
+
+![](hw7_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+# fit using nnet function
+nnet_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
 ```
 
     ## # weights:  41
-    ## initial  value 141.508352 
-    ## iter  10 value 100.368814
-    ## iter  20 value 86.520856
-    ## iter  30 value 75.951693
-    ## iter  40 value 71.066690
-    ## iter  50 value 65.617377
-    ## iter  60 value 64.040688
-    ## iter  70 value 63.591994
-    ## iter  80 value 63.240094
-    ## iter  90 value 63.176273
-    ## iter 100 value 63.006269
-    ## final  value 63.006269 
+    ## initial  value 186.236391 
+    ## iter  10 value 98.848170
+    ## iter  20 value 88.752298
+    ## iter  30 value 81.212151
+    ## iter  40 value 77.951035
+    ## iter  50 value 69.495702
+    ## iter  60 value 61.936277
+    ## iter  70 value 59.459878
+    ## iter  80 value 57.815908
+    ## iter  90 value 57.183054
+    ## iter 100 value 56.975259
+    ## final  value 56.975259 
     ## stopped after 100 iterations
 
 ``` r
-n_preds <- predict(n_fit, dat$xnew, type="class")
-```
+# compute probabilities and predictions using nnet 
+nnet_preds <- predict(nnet_fit, dat$xnew, type="class")
+nnet_probs <- predict(nnet_fit, dat$xnew, type="raw")
 
-``` r
-plot(1:length(k_preds), k_preds, type ="l", col = "red")
+# plot nnet decision boundary
+plot_nnet_preds <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
+
+  ## compute predictions from nnet
+  preds <- nnet_preds
+  probs <- nnet_probs[,1]
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+
+plot_nnet_preds(nnet_fit) # final plot
 ```
 
 ![](hw7_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
-
-``` r
-plot(1:length(n_preds), n_preds, type ="l", col = "blue")
-```
-
-![](hw7_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 ## 4\. (optional extra credit) Convert the neural network described in the “Image Classification” tutorial to a network that is similar to one of the convolutional networks described during lecture on 4/15 (i.e., Net-3, Net-4, or Net-5) and also described in the ESL book section 11.7. See the \!ConvNet tutorial on the RStudio Keras website.
